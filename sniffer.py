@@ -4,41 +4,62 @@ import struct
 
 def main():
 	conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(3))
-	while True:
-		raw_data, addr = conn.recvfrom(65536)
-		dest_mac, src_mac, eth_proto, data = frame_internet(raw_data)
-		print('\nFrame Internet')
-		print('\tMAC de Destino: {}, MAC de Origem: {}, Protocolo: {}'.format(dest_mac, src_mac, eth_proto))
-		
-		#IPv4
-		if eth_proto == 8:
-			(version, header_lenght, ttl, proto, src, target, data) = ipv4_packet(data)
-			print ('Pacote IPv4')
-			print ('\tVersão: {}, Tamanho do Cabecalho: {}, Tempo de Vida: {}'.format(version, header_lenght, ttl))
-			print ('\tProtocolo: {}, IP de Origem: {}, IP de Destino: {}'.format(proto, src, target))
-		
-			#ICMP
-			if proto == 1:
-				icmp_type, code, checksum, data = icmp_packet(data)
-				print('Pacote ICMP: ')
-				print('\tTipo: {}, Código: {}, Checksum: {},'.format(icmp_type, code, checksum))
+	print('+---------------------------------------+')
+	print('+----------FILTRAR PACOTES IPv4---------+')
+	print('|                                       |')
+	print('|[ 1 ] ICMP                             |')
+	print('|[ 2 ] TCP                              |')
+	print('|[ 3 ] UDP                              |')
+	print('|[ 4 ] Capturar todos                   |')
+	print('|                                       |')
+	print('+---------------------------------------+')
+	print('+---------------------------------------+')
+	op = int(input())
+	if op >= 1 and op <= 4:
+		while True:
+			raw_data, addr = conn.recvfrom(65536)
+			dest_mac, src_mac, eth_proto, data = frame_internet(raw_data)
+			
+			
+			#IPv4
+			if eth_proto == 8:
+				(version, header_lenght, ttl, proto, src, target, data) = ipv4_packet(data)
+						
+				
+				#ICMP
+				if proto == 1:
+					icmp_type, code, checksum, data = icmp_packet(data)
+					if op == 1 or op == 4:
+						frame_eth_format(dest_mac, src_mac, eth_proto)
+						ipv4_format(version, header_lenght, ttl, proto, src, target)
+						print('+-----------------------------------------ICMP------------------------------------------+')
+						print('|Tipo: {}\t| Código: {}\t\t\t| Checksum: {}  \t\t\t|'.format(icmp_type, code, checksum))
+						print('+---------------------------------------------------------------------------------------+')
 							
-			#TCP
-			elif proto == 6:
-				(src_port, dest_port, sequence, ack, flag_urg, flag_ack, flag_psh, flag_rst, flag_syn, flag_fin, data) = tcp(data)
-				print('TCP')
-				print('\tPorta de Origem: {}, Porta de Destino: {}'.format(src_port, dest_port))
-				print('\tN de Sequencia: {}, N de Confirmacao (ACK): {}'.format(sequence, ack))
-				print('Flags')
-				print('\tURG: {}, ACK: {}, PSH: {}, RST: {}, SYN: {}, FIN: {}'.format(flag_urg, flag_ack, flag_psh, flag_rst, flag_syn, flag_fin))
+				#TCP
+				elif proto == 6:
+					(src_port, dest_port, sequence, ack, flag_urg, flag_ack, flag_psh, flag_rst, flag_syn, flag_fin, data) = tcp(data)
+					if op == 2 or op == 4:
+						frame_eth_format(dest_mac, src_mac, eth_proto)
+						ipv4_format(version, header_lenght, ttl, proto, src, target)
+						print('+-----------------------------------------TCP-------------------------------------------+')
+						print('|Porta de Origem: {}\t\t| Porta de Destino: {}   \t\t\t\t|'.format(src_port, dest_port))
+						print('|N de Sequencia: {}\t| N de Confirmacao (ACK): {}\t\t\t|'.format(sequence, ack))
+						print('+----------------------------------------Flags------------------------------------------+')
+						print('|URG: {}\t| ACK: {}\t| PSH: {}\t| RST: {}\t| SYN: {}\t| FIN: {}\t|'.format(flag_urg, flag_ack, flag_psh, flag_rst, flag_syn, flag_fin))
+						print('+---------------------------------------------------------------------------------------+')
 				
-				
-			#UDP
-			elif proto == 17:
-				src_port, dest_port, length, data = udp(data)
-				print('UDP')
-				print('\tPorta de Origem: {}, Porta e Destino: {}, Tamanho: {}'.format(src_port, dest_port, length))
-		
+				#UDP
+				elif proto == 17:
+					src_port, dest_port, length, data = udp(data)
+					if op == 3 or op == 4:
+						frame_eth_format(dest_mac, src_mac, eth_proto)
+						ipv4_format(version, header_lenght, ttl, proto, src, target)
+						print('+-----------------------------------------UDP-------------------------------------------+')
+						print('|Porta de Origem: {}\t| Porta e Destino: {}  \t| Tamanho: {}    \t\t|'.format(src_port, dest_port, length))
+						print('+---------------------------------------------------------------------------------------+')
+	else:
+		print('Opcao invalida!')
 
 #Desempacotar frame Internet
 def frame_internet(data):
@@ -85,4 +106,15 @@ def udp(data):
 	src_port, dest_port, size = struct.unpack('! H H 2x H', data[:8])
 	return src_port, dest_port, size, data[8:]
 
+#Mostrar na tela o frame Internet formatado	
+def frame_eth_format(dest_mac, src_mac, eth_proto):
+	print('\n\n+------------------------------------Frame Internet-------------------------------------+')
+	print('|MAC de Destino: {} | MAC de Origem: {} | Protocolo: {}\t|'.format(dest_mac, src_mac, eth_proto))
+
+#Mostrar na tela o pacote IPv4 formatado
+def ipv4_format(version, header_lenght, ttl, proto, src, target):
+	print ('+--------------------------------------Pacote IPv4--------------------------------------+')
+	print ('|Versão: {}\t| Tamanho do Cabecalho: {}\t| Tempo de Vida: {}\t\t\t|'.format(version, header_lenght, ttl))
+	print ('|Protocolo: {}\t| IP de Origem: {}\t| IP de Destino: {}      \t|'.format(proto, src, target))
+	
 main()
