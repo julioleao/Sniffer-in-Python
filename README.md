@@ -18,7 +18,7 @@ Os softwares utilizados foram:
 
 ## Desenvolvimento
 
-Tomando como base o formato padrão dos protocolos de rede, e com a utilização de bibliotecas como *socket* e *struct*, conseguimos realizar a coleta e analise de pacotes dos protocolos da camada de rede **IPv4**, **ICMP** e da camada de transporte **TCP** e **UDP**. Todos dados trafegados na rede serão analisados, sem exceção, através do parâmetros **65536** em *recvfrom()*, o que informa que todas as portas são válidas para análise.
+Tomando como base o formato padrão dos protocolos de rede, e com a utilização de bibliotecas como *socket* e *struct*, conseguimos realizar a coleta e analise de pacotes dos protocolos da camada de rede **IPv4**, **ICMP** e da camada de transporte **TCP** e **UDP**. Todos dados trafegados na rede serão analisados, sem exceção, através do parâmetros **65536** em *recvfrom()*, o que informa que todas as portas são válidas para análise. Optamos também por um sistema de filtradgem simples, onde o usuário vai poder escolher qual pacote ele deseja capurar através de um menu.
 
 Começamos então definindo uma conexão, com:
 
